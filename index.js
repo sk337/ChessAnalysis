@@ -70,6 +70,9 @@ async function GetchesscomGame(gameurl) {
  */
 async function GetLichessGame(gameurl) {
   const game = await Bun.fetch(`https://lichess.org/game/export/${gameurl.split("/")[3]}`);
+  if (!game.ok) {
+    throw new Error("Invalid game");
+  }
   return game.text();
 }
 
