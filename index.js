@@ -44,8 +44,21 @@ function isUrl(str) {
  * @returns {Promise<object>} - A promise that resolves to the game data in JSON format.
  */
 async function GetchesscomGame(gameurl) {
-  const game = await Bun.fetch(`https://api.chess.com/pub/game/${gameurl.split("/").pop().split("?")[0]}`);
-  return game.json();
+  const gameid=gameurl.split("/").pop().split("?")[0];
+  const gameRawData = await Bun.fetch("https://www.chess.com/callback/live/game/"+gameid);
+  const gameJson = await gameRawData.json();
+  const gameDate= gameJson["game"]["pgnHeaders"]["Date"];
+  const searchDate = gameDate.split(".")[0]+"/"+gameDate.split(".")[1];
+  const player = gameJson["players"]["top"]["username"];
+  const gameArchive= await Bun.fetch("https://api.chess.com/pub/player/"+player+"/games/"+searchDate);
+  const gamesjson = await gameArchive.json();
+  const gameliveurl = `https://www.chess.com/game/live/${gameid}`;
+  for (let i=0; i<gamesjson["games"].length; i++) {
+    if (gamesjson["games"][i]["url"] === gameliveurl) {
+      return gamesjson["games"][i];
+    }
+  }
+  throw new Error("Could Not find game");
 }
 
 /**
@@ -70,7 +83,7 @@ if (args.GAME.endsWith(".pgn")) {
   let url = new URL(args.GAME);
   if (url.hostname === "lichess.org") {
     mode = "lichess";
-  } else if (url.hostname === "chess.com") {
+  } else if (url.hostname.endsWith("chess.com")) {
     mode = "chesscom";
   } else {
     throw new Error("Invalid game");
@@ -89,8 +102,7 @@ if (mode === "pgn") {
   const json = await GetchesscomGame(args.GAME);
   chess.loadPgn(json.pgn);
 } else if (mode === "lichess") {
-  let t=await GetLichessGame(args.GAME);
-  chess.loadPgn(t);
+  chess.loadPgn(await GetLichessGame(args.GAME));
 }
 
 
