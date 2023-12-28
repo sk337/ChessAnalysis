@@ -41,7 +41,8 @@ function isUrl(str) {
  * Fetches a chess.com game using the game URL.
  *
  * @param {string} gameurl - The chess.com game URL.
- * @returns {Promise<object>} - A promise that resolves to the game data in JSON format.
+ * @returns {Promise<Object>} - A promise that resolves to the game data in JSON format.
+ * @throws {Error} - If the game cannot be found.
  */
 async function GetchesscomGame(gameurl) {
   const gameid=gameurl.split("/").pop().split("?")[0];
