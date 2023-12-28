@@ -21,6 +21,7 @@ parser.add_argument("GAME", {
   help: "Game can either be a local .pgn file or a lichess.org or chess.com game URL",
 });
 
+
 /**
  * Checks if a string is a valid URL.
  *
@@ -89,7 +90,6 @@ if (mode === "pgn") {
   chess.loadPgn(json.pgn);
 } else if (mode === "lichess") {
   let t=await GetLichessGame(args.GAME);
-  console.log(t);
   chess.loadPgn(t);
 }
 
