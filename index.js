@@ -27,7 +27,10 @@ parser.add_argument("--depth", "-d", {
   help: "Depth of analysis",
   default: 20,
 });
-
+parser.add_argument("--force-file", "-f", {
+  help: "Force the game to be loaded as a .pgn file regardless of the file extension or url",
+  action: "store_true",
+});
 
 /**
  * Checks if a string is a valid URL.
@@ -97,8 +100,10 @@ if (args.GAME.endsWith(".pgn")) {
   } else if (url.hostname.endsWith("chess.com")) {
     mode = "chesscom";
   } else {
-    throw new Error("Invalid game");
+    mode = "url";
   }
+} else if (args.force_file) {
+  mode = "pgn";
 } else {
   throw new Error("Invalid game");
 }
@@ -114,6 +119,12 @@ if (mode === "pgn") {
   chess.loadPgn(json.pgn);
 } else if (mode === "lichess") {
   chess.loadPgn(await GetLichessGame(args.GAME));
+} else if (mode === "url") {
+  try {
+    chess.loadPgn((await Bun.fetch(args.GAME)).text());
+  } catch (e) {
+    throw new Error("Game not found: Make sure the URL is correct and it contains Plain Text PGN data");
+  }
 }
 
 /**
