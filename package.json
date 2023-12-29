@@ -9,7 +9,7 @@
   "author": "",
   "license": "MIT",
   "bin": {
-    "chessanalysis": "index.js"
+    "chess-analysis": "./index.js"
   },
   "devDependencies": {
     "eslint": "^8.56.0"

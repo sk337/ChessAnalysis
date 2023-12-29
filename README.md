@@ -15,3 +15,18 @@ cd chess-analysis
 bun install
 bun index.js
 ```
+## Usage
+
+```
+usage: chess-analysis [-h] [--depth DEPTH] GAME
+
+Chess Game Analysis CLI
+
+positional arguments:
+  GAME                  Game can either be a local .pgn file or a lichess.org or chess.com game URL
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --depth DEPTH, -d DEPTH
+                        Depth of analysis
+```

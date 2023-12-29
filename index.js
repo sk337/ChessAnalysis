@@ -12,13 +12,20 @@
 
 import { ArgumentParser } from "argparse";
 import { Chess } from "chess.js";
+import { stockfishPath } from "./config.json";
+
 
 const parser = new ArgumentParser({
   description: "Chess Game Analysis CLI",
+  prog: "chess-analysis",
 });
 
 parser.add_argument("GAME", {
   help: "Game can either be a local .pgn file or a lichess.org or chess.com game URL",
+});
+parser.add_argument("--depth", "-d", {
+  help: "Depth of analysis",
+  default: 20,
 });
 
 
@@ -69,7 +76,7 @@ async function GetchesscomGame(gameurl) {
  * @returns {Promise<string>} - A promise that resolves to the game data in PGN format.
  */
 async function GetLichessGame(gameurl) {
-  const game = await Bun.fetch(`https://lichess.org/game/export/${gameurl.split("/")[3]}`);
+  const game = await Bun.fetch(`https://lichess.org/game/export/${gameurl.split("/")[3]}?evals=0&clocks=0`);
   if (!game.ok) {
     throw new Error("Invalid game");
   }
@@ -109,4 +116,31 @@ if (mode === "pgn") {
   chess.loadPgn(await GetLichessGame(args.GAME));
 }
 
+/**
+ * Analyzes the chess position using the Stockfish engine.
+ *
+ * @param {string} position - The chess position in FEN (Forsyth–Edwards Notation) format.
+ * @returns {Promise<Object>} - A promise that resolves to the analysis result, including the best move and evaluation.
+ */
+async function analyze(position) {
+  /**
+   * @type {string}
+   */
+  let command = `uci\nposition fen ${position}\ngo depth ${args.depth}\neval\nquit`;
+  const engine = Bun.spawn([stockfishPath], {
+    stdin: "pipe",
+    stdout: "pipe"
+  });
+  engine.stdin.write(command);
+  engine.stdin.flush();
+  engine.stdin.end();
+  const result = await new Response(engine.stdout).text();
+  engine.kill();
+  const res = {
+    bestmove: result.split("\n").filter(line => line.startsWith("bestmove")).toString().match(/[a-h][1-8][a-h][1-8]/i)[0],
+    eval: result.split("\n").filter(line => line.startsWith("Final evaluation")).toString().match(/[+-]\d+.\d+/i)[0],
+  };
+  return res;
+}
 
+console.log(await analyze(chess.fen()));
